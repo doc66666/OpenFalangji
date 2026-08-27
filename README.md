@@ -4,9 +4,19 @@
 
 一个本地优先的多 Agent 协调平台。OpenFalangji 将各类终端式 Agent（例如 Claude Code、OpenCode、Codex 与 Pi）放入独立的 AgentHost 中，由 Master 提供注册、发现、权限和任务状态控制面。Agent 间的业务消息仍然点对点传递，Master 不成为内容中转站。
 
+![Master 控制面界面](docs/images/master-console.png)
+
+![AgentHost 终端界面](docs/images/host-console.png)
+
 ## 中文
 
 ### 架构与工作方式
+
+#### 名称与组织隐喻
+
+**OpenFalangji** 的命名灵感来自法国空想社会主义者夏尔·傅立叶（Charles Fourier）的 **phalanstère**。这个词由 *phalange*（协作群体/方阵）与 *monastère*（共同体居所）构成；其中 *phalange* 指向由具有不同能力的成员构成、共同劳动的协作单元。我们借用的是“多个自主单元在共同规则下协作”的意象，而非复刻其历史制度。法兰西学院词典将 *phalanstère* 定义为傅立叶设想的生产与消费合作社；其词源正是 *phalange* 与 *monastère* 的组合。[法兰西学院词典](https://www.dictionnaire-academie.fr/article/A9P1896)
+
+从软件架构看，项目也有明显的**微服务式组织方式**：每个 AgentHost 都是独立运行、独立持久化、拥有明确边界的自治节点；Master 类似控制面，负责注册、发现、权限和全局状态，而不承载业务消息本身。不同于传统微服务的是，这里的“服务”是具备推理能力、可选择继续、转发、创建新任务或结束任务的 Agent。
 
 ```text
 浏览器 ──> Master :9300 ──> 注册审批 / 邻居发现 / 权限 / 全局任务状态
@@ -84,6 +94,12 @@ cd ../agent-host && npm test
 ### Architecture and flow
 
 OpenFalangji is a local-first coordination platform for terminal-based agents such as Claude Code, OpenCode, Codex, and Pi.
+
+#### Name and organisational metaphor
+
+**OpenFalangji** takes inspiration from Charles Fourier's **phalanstère**, a term formed from *phalange* (a cooperative group or phalanx) and *monastère* (a communal residence). In Fourier's vocabulary, a *phalange* evokes people with different capacities working as an associated unit. We borrow the image of autonomous units cooperating under shared rules; the project does not attempt to reproduce the historical system. The Académie française describes the *phalanstère* as Fourier's cooperative society of production and consumption and records its derivation from *phalange* and *monastère*. [Académie française dictionary](https://www.dictionnaire-academie.fr/article/A9P1896)
+
+The platform also resembles a **microservice-style organisation**. Each AgentHost is an independently running, persistent, bounded autonomous node. Master acts as a control plane for registration, discovery, permissions, and global task state instead of carrying work messages. Unlike conventional microservices, these nodes are reasoning Agents that can decide whether to continue, forward, create a task, or complete it.
 
 - **Master** is the control plane. It owns Host registration, heartbeats, discovery permissions, Leader markers, and global task state. State is persisted in `master/.data/master-state.json`.
 - **AgentHost** is an individual agent runtime. It owns the PTY, browser console, task queues, task persistence, and completion detection.
