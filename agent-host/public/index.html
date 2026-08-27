@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgentHost Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/vendor/xterm/css/xterm.css" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="#terminal" style="color:inherit"><span class="brand-mark"></span><span>AgentHost</span></a><div class="top-status"><button id="language-toggle" class="btn secondary" type="button" aria-label="Switch language">EN</button><span id="agent-id" class="stamp">-</span><span id="status" class="status-pill offline">connecting</span></div></header>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Host 功能导航">
+      <p class="sidebar-label">WORKSPACE</p>
+      <button class="nav-item active" data-page="terminal">01 / 终端</button><button class="nav-item" data-page="tasks">02 / 任务</button><button class="nav-item" data-page="network">03 / 网络</button><button class="nav-item" data-page="settings">04 / 设置</button>
+      <div class="sidebar-foot"><span>Host</span><b id="sidebar-env">NATIVE</b></div>
+    </aside>
+    <main class="content">
+      <section class="page active" data-page-panel="terminal">
+        <div class="page-head"><div><span class="eyebrow">LIVE RUNTIME</span><h1>Agent 终端</h1></div><button id="complete-btn" class="btn btn-yellow">标记完成</button></div>
+        <div class="stat-grid"><article class="stat-card teal"><span>执行状态</span><b id="busy-state">-</b></article><article class="stat-card yellow"><span>当前任务</span><b id="current-task">-</b></article><article class="stat-card red"><span>接收队列</span><b id="inbound-length">0</b></article><article class="stat-card mint"><span>发送队列</span><b id="outbound-length">0</b></article></div>
+        <div class="terminal-card"><div class="terminal-title"><span></span><b>PTY / INTERACTIVE</b><small>键盘输入将直接发送给 Agent</small></div><div id="terminal-container"></div></div>
+        <div class="compose-card"><label>任务输入</label><textarea id="prompt-input" rows="3" placeholder="输入要交给 Agent 的内容；Ctrl + Enter 入队"></textarea><div class="compose-actions"><input id="reply-to-input" type="text" placeholder="可选回调地址 http://..." /><button id="send-btn" class="btn btn-red">入队发送 →</button></div></div>
+      </section>
+      <section class="page" data-page-panel="tasks">
+        <div class="page-head"><div><span class="eyebrow">WORK QUEUES</span><h1>任务与路由</h1></div></div>
+        <div id="leader-panel" class="leader-card" hidden><span class="eyebrow">LEADER</span><h2>全局决策咨询</h2><div class="form-inline"><input id="leader-consult-input" type="text" placeholder="描述要检查的状况或需要分配的任务" /><button id="leader-consult-btn" class="btn btn-yellow">发起咨询</button></div><small id="leader-consult-result"></small></div>
+        <div class="card-grid two"><article class="panel-card"><div class="card-head"><h2>接收队列</h2><span>INBOUND</span></div><div id="inbound-list" class="queue-list"></div></article><article class="panel-card"><div class="card-head"><h2>发送队列</h2><span>OUTBOUND</span></div><div id="outbound-list" class="queue-list"></div></article></div>
+        <article class="panel-card accent-yellow"><div class="card-head"><h2>发送任务给邻居</h2><span>P2P</span></div><div class="form-inline"><select id="send-neighbor-select"><option value="">选择邻居...</option></select><input id="send-neighbor-prompt" type="text" placeholder="任务内容" /><button id="send-neighbor-btn" class="btn btn-dark">发送任务</button></div></article>
+      </section>
+      <section class="page" data-page-panel="network">
+        <div class="page-head"><div><span class="eyebrow">DISCOVERY</span><h1>网络与 Master</h1></div></div>
+        <div class="card-grid two"><article class="panel-card accent-red"><div class="card-head"><h2>Master 注册</h2><span id="master-status" class="status-pill">未申请</span></div><label>Master 地址</label><input id="master-url-input" type="text" placeholder="http://127.0.0.1:9300" /><button id="master-register-btn" class="btn btn-red block">发送注册申请</button></article><article class="panel-card accent-teal"><div class="card-head"><h2>手动邻居</h2><button id="refresh-neighbors-btn" class="mini-btn">刷新</button></div><label>Agent ID</label><input id="neighbor-id-input" type="text" placeholder="agent-b" /><label>Host 地址</label><input id="neighbor-url-input" type="text" placeholder="http://127.0.0.1:9101" /><button id="add-neighbor-btn" class="btn btn-teal block">添加邻居</button></article></div>
+        <article class="panel-card"><div class="card-head"><h2>已发现节点</h2><span>AGENT CARDS</span></div><div id="neighbor-list" class="neighbor-grid"></div></article>
+      </section>
+      <section class="page" data-page-panel="settings">
+        <div class="page-head"><div><span class="eyebrow">CONFIGURATION</span><h1>运行设置</h1></div></div>
+        <div class="card-grid two"><article class="panel-card accent-yellow"><div class="card-head"><h2>终端环境</h2><span>WINDOWS / WSL</span></div><label>执行环境</label><select id="terminal-env-select"><option value="native">Windows 原生</option><option value="wsl">WSL</option></select><label>WSL 发行版（可选）</label><input id="wsl-distro-input" type="text" placeholder="例如 Ubuntu；空白使用默认发行版" /><label>Agent 启动命令</label><input id="command-input" type="text" placeholder="claude / opencode / codex" /><label>工作目录</label><input id="cwd-input" type="text" placeholder="D:\project 或 /mnt/d/project" /><label>完成检测</label><select id="completion-provider"><option value="auto">自动识别</option><option value="opencode">OpenCode</option><option value="claude">Claude Code</option><option value="codex">Codex</option><option value="pi">Pi</option><option value="manual">手动</option><option value="custom">自定义 Reader</option></select><input id="custom-reader-file" type="text" placeholder="自定义 Reader JS 路径" hidden /><button id="start-btn" class="btn btn-yellow block">启动 / 重启 Agent</button></article><article class="panel-card accent-mint"><div class="card-head"><h2>协作参数</h2><span>HOST PROFILE</span></div><label>Agent ID</label><input id="agent-id-config" type="text" placeholder="agent-a" /><label>协作模式</label><select id="mode-select"><option value="minimal">极简模式</option><option value="task">任务模式</option></select><label>最大跳转</label><input id="max-hops-input" type="number" min="1" value="5" /><button id="save-config-btn" class="btn btn-teal block">保存配置</button></article></div>
+      </section>
+    </main>
+  </div>
+  <div id="toast" class="toast" hidden></div>
+  <script src="/vendor/xterm/lib/xterm.js"></script><script src="/vendor/xterm-addon-fit/lib/addon-fit.js"></script><script src="/main.js"></script>
+</body>
+</html>
